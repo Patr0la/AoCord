@@ -2,7 +2,7 @@
   "name": "AoCord",
   "scripts": {
     "build": "tsc",
-    "run": "node dist/main.js"
+    "start": "node dist/main.js"
   },
   "version": "1.0.0",
   "main": "src/main.js",

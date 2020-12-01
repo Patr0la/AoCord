@@ -13,6 +13,7 @@ unlockJob.start();
 let update5Min = new CronJob("*/5 * * * *", () => updateLeaderboard("750429316927717466", () => {}));
 let update30Min = new CronJob("*/30 * * * *", () => updateLeaderboard("750429316927717466", () => {}));
 
+update5Min.start();
 update30Min.start();
 
 let lock = (locked: boolean) => {
