@@ -4,8 +4,8 @@ import { DatabaseManager, DEFAULT_PREFIX } from "./DatabaseManager";
 import * as https from "https";
 import { CronJob } from "cron";
 
-let lockJob = new CronJob("59 5 * * *", () => lock(true));
-let unlockJob = new CronJob("30 10 * * *", () => lock(false));
+let lockJob = new CronJob("59 6 * * *", () => lock(true));
+let unlockJob = new CronJob("30 11 * * *", () => lock(false));
 
 lockJob.start();
 unlockJob.start();
@@ -116,7 +116,7 @@ let buildLeaderboard = (guildid: string, callback: (rspd: Discord.MessageEmbed) 
 				rspd.setTitle(`Advent of code ${data.event}`);
 				rspd.setURL("https://adventofcode.com/2020/leaderboard/private/view/963063");
 				rspd.setColor(15844367);
-				rspd.setFooter(`Updated ${new Date().toLocaleString()}`, "https://minapecheux.com/wp/wp-content/uploads/2019/12/advent_of_code-icon2.png");
+				rspd.setFooter(`Updated ${new Date(new Date().getTime() + 3600000).toLocaleString()}`, "https://minapecheux.com/wp/wp-content/uploads/2019/12/advent_of_code-icon2.png");
 				rspd.setAuthor("AoCord", "https://minapecheux.com/wp/wp-content/uploads/2019/12/advent_of_code-icon2.png", "https://adventofcode.com/2020/leaderboard/private/view/963063");
 				rspd.setThumbnail("https://icon-library.com/images/leader-board-icon/leader-board-icon-21.jpg");
 
