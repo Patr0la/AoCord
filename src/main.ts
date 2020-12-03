@@ -23,7 +23,7 @@ let lock = (locked: boolean) => {
 				client.channels.fetch(solutionsChannel).then((c) => {
 					let channel = c as Discord.TextChannel;
 
-					channel.updateOverwrite(roleid as string, { VIEW_CHANNEL: locked });
+					channel.updateOverwrite(roleid as string, { SEND_MESSAGES: !locked });
 				});
 		});
 	});
