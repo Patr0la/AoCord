@@ -4,8 +4,8 @@ import { DatabaseManager, DEFAULT_PREFIX } from "./DatabaseManager";
 import * as https from "https";
 import { CronJob } from "cron";
 
-let lockJob = new CronJob("59 6 * * *", () => lock(true));
-let unlockJob = new CronJob("30 11 * * *", () => lock(false));
+let lockJob = new CronJob("59 4 * * *", () => lock(true));
+let unlockJob = new CronJob("30 9 * * *", () => lock(false));
 
 lockJob.start();
 unlockJob.start();
@@ -128,7 +128,7 @@ let buildLeaderboard = (guildid: string, callback: (rspd: Discord.MessageEmbed) 
 					startsTotal = "";
 
 				data.sortedByScore?.forEach((id, i) => {
-					if (i > 20) return;
+					if (i >= 20) return;
 					ranks += `**${i + 1}**` + "\n";
 					nicnkames += data.members[id].discordId ? `<@${data.members[id].discordId}>\n` : `${data.members[id].name}\n`;
 					starts += ZERO_TO_25.reduce((pv, cv) => pv + (data.members[id].completion_day_level[cv] ? (data.members[id].completion_day_level[cv]["2"] ? "★" : "☆") : ""), " ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌") + "\n";
@@ -148,7 +148,7 @@ let buildLeaderboard = (guildid: string, callback: (rspd: Discord.MessageEmbed) 
 						inline: true,
 					},
 					{
-						name: "★".repeat(25),
+						name: "★".repeat(19),
 						value: starts,
 						inline: true,
 					},
