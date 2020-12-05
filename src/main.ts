@@ -17,16 +17,16 @@ update5Min.start();
 update30Min.start();
 
 let lock = (locked: boolean) => {
-	Database.getField("solutions", "750429316927717466", (solutionsChannel) => {
-		Database.getField("role", "750429316927717466", (roleid) => {
-			if (solutionsChannel && roleid)
-				client.channels.fetch(solutionsChannel).then((c) => {
-					let channel = c as Discord.TextChannel;
-
-					channel.updateOverwrite(roleid as string, { SEND_MESSAGES: !locked });
-				});
-		});
-	});
+//	Database.getField("solutions", "750429316927717466", (solutionsChannel) => {
+//		Database.getField("role", "750429316927717466", (roleid) => {
+//			if (solutionsChannel && roleid)
+//				client.channels.fetch(solutionsChannel).then((c) => {
+//					let channel = c as Discord.TextChannel;
+//
+//					channel.updateOverwrite(roleid as string, { SEND_MESSAGES: !locked });
+//				});
+//		});
+//	});
 
 	if (locked) {
 		update5Min.start();
