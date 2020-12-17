@@ -148,7 +148,7 @@ let buildLeaderboard = (guildid: string, callback: (rspd: Discord.MessageEmbed) 
 						inline: true,
 					},
 					{
-						name: "★".repeat(19),
+						name: "★".repeat(15),
 						value: starts,
 						inline: true,
 					},
