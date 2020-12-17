@@ -7,26 +7,20 @@ import { CronJob } from "cron";
 let lockJob = new CronJob("59 4 * * *", () => lock(true));
 let unlockJob = new CronJob("30 9 * * *", () => lock(false));
 
-lockJob.start();
-unlockJob.start();
-
 let update5Min = new CronJob("*/5 * * * *", () => updateLeaderboard("750429316927717466", () => {}));
 let update30Min = new CronJob("*/30 * * * *", () => updateLeaderboard("750429316927717466", () => {}));
 
-update5Min.start();
-update30Min.start();
-
 let lock = (locked: boolean) => {
-//	Database.getField("solutions", "750429316927717466", (solutionsChannel) => {
-//		Database.getField("role", "750429316927717466", (roleid) => {
-//			if (solutionsChannel && roleid)
-//				client.channels.fetch(solutionsChannel).then((c) => {
-//					let channel = c as Discord.TextChannel;
-//
-//					channel.updateOverwrite(roleid as string, { SEND_MESSAGES: !locked });
-//				});
-//		});
-//	});
+	//	Database.getField("solutions", "750429316927717466", (solutionsChannel) => {
+	//		Database.getField("role", "750429316927717466", (roleid) => {
+	//			if (solutionsChannel && roleid)
+	//				client.channels.fetch(solutionsChannel).then((c) => {
+	//					let channel = c as Discord.TextChannel;
+	//
+	//					channel.updateOverwrite(roleid as string, { SEND_MESSAGES: !locked });
+	//				});
+	//		});
+	//	});
 
 	if (locked) {
 		update5Min.start();
@@ -44,6 +38,11 @@ const Database = new DatabaseManager("db.sqlite3", (sucess) => {
 });
 
 client.on("ready", () => {
+	lockJob.start();
+	unlockJob.start();
+
+	update30Min.start();
+
 	console.log(`Logged in as ${client.user?.tag}!`);
 
 	console.log(`Joined to ${client.guilds.cache.reduce((c, v) => c + 1, 0)}`);
@@ -91,76 +90,73 @@ let updateLeaderboard = (guildid: string, callback: (sucess: boolean) => void) =
 	Database.getField("leaderboard", guildid, (leaderboardChannelId) => {
 		Database.getField("leaderboardId", guildid, (leaderboardMessageId) => {
 			if (leaderboardChannelId && leaderboardMessageId) {
-				buildLeaderboard(guildid, (rspd) => {
-					client.guilds.cache
-						.find((g) => g.id == guildid)
-						?.channels.cache.find((c) => c.id == leaderboardChannelId)
-						?.fetch()
-						.then((channel) => {
-							(channel as Discord.TextChannel).messages.fetch(leaderboardMessageId).then((fmsg) => {
-								fmsg.edit(rspd);
+				Database.getField("apiKey", guildid, (apikey) => {
+					if (apikey) {
+						fetchNewData(apikey, guildid, (data) => {
+							buildLeaderboard(guildid, data, (rspd) => {
+								client.guilds.cache
+									.find((g) => g.id == guildid)
+									?.channels.cache.find((c) => c.id == leaderboardChannelId)
+									?.fetch()
+									.then((channel) => {
+										(channel as Discord.TextChannel).messages.fetch(leaderboardMessageId).then((fmsg) => {
+											fmsg.edit(rspd);
+										});
+									});
 							});
 						});
+					}
 				});
 			}
 		});
 	});
 };
 
-let buildLeaderboard = (guildid: string, callback: (rspd: Discord.MessageEmbed) => void) => {
+let buildLeaderboard = (guildid: string, data: IAocLeaderboard, callback: (rspd: Discord.MessageEmbed) => void) => {
 	let rspd = new Discord.MessageEmbed();
 
-	Database.getField("apiKey", guildid, (apikey) => {
-		if (apikey) {
-			fetchNewData(apikey, guildid, (data) => {
-				rspd.setTitle(`Advent of code ${data.event}`);
-				rspd.setURL("https://adventofcode.com/2020/leaderboard/private/view/963063");
-				rspd.setColor(15844367);
-				rspd.setFooter(`Updated ${new Date(new Date().getTime() + 3600000).toLocaleString()}`, "https://minapecheux.com/wp/wp-content/uploads/2019/12/advent_of_code-icon2.png");
-				rspd.setAuthor("AoCord", "https://minapecheux.com/wp/wp-content/uploads/2019/12/advent_of_code-icon2.png", "https://adventofcode.com/2020/leaderboard/private/view/963063");
-				rspd.setThumbnail("https://icon-library.com/images/leader-board-icon/leader-board-icon-21.jpg");
+	rspd.setTitle(`Advent of code ${data.event}`);
+	rspd.setURL("https://adventofcode.com/2020/leaderboard/private/view/963063");
+	rspd.setColor(15844367);
+	rspd.setFooter(`Updated ${new Date(new Date().getTime() + 3600000).toLocaleString()}`, "https://minapecheux.com/wp/wp-content/uploads/2019/12/advent_of_code-icon2.png");
+	rspd.setAuthor("AoCord", "https://minapecheux.com/wp/wp-content/uploads/2019/12/advent_of_code-icon2.png", "https://adventofcode.com/2020/leaderboard/private/view/963063");
+	rspd.setThumbnail("https://icon-library.com/images/leader-board-icon/leader-board-icon-21.jpg");
 
-				let ranks = "",
-					usernames = "",
-					nicnkames = "",
-					scores = "",
-					starts = "",
-					startsTotal = "";
+	let ranks = "",
+		usernames = "",
+		nicnkames = "",
+		scores = "",
+		starts = "",
+		startsTotal = "";
 
-				data.sortedByScore?.forEach((id, i) => {
-					if (i >= 20) return;
-					ranks += `**${i + 1}**` + "\n";
-					nicnkames += data.members[id].discordId ? `<@${data.members[id].discordId}>\n` : `${data.members[id].name}\n`;
-					starts += ZERO_TO_25.reduce((pv, cv) => pv + (data.members[id].completion_day_level[cv] ? (data.members[id].completion_day_level[cv]["2"] ? "★" : "☆") : ""), " ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌") + "\n";
-					scores += data.members[id].local_score + "\n";
-					startsTotal += data.members[id].stars + "\n";
-				});
-
-				rspd.addFields(
-					{
-						name: "Rank",
-						value: ranks,
-						inline: true,
-					},
-					{
-						name: "Username",
-						value: nicnkames,
-						inline: true,
-					},
-					{
-						name: "★".repeat(15),
-						value: starts,
-						inline: true,
-					},
-				);
-
-				callback(rspd);
-			});
-		} else {
-			rspd.setTitle("Database error.");
-			callback(rspd);
-		}
+	data.sortedByScore?.forEach((id, i) => {
+		if (i >= 20) return;
+		ranks += `**${i + 1}**` + "\n";
+		nicnkames += data.members[id].discordId ? `<@${data.members[id].discordId}>\n` : `${data.members[id].name}\n`;
+		starts += ZERO_TO_25.reduce((pv, cv) => pv + (data.members[id].completion_day_level[cv] ? (data.members[id].completion_day_level[cv]["2"] ? "★" : "☆") : ""), " ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌") + "\n";
+		scores += data.members[id].local_score + "\n";
+		startsTotal += data.members[id].stars + "\n";
 	});
+
+	rspd.addFields(
+		{
+			name: "Rank",
+			value: ranks,
+			inline: true,
+		},
+		{
+			name: "Username",
+			value: nicnkames,
+			inline: true,
+		},
+		{
+			name: "★".repeat(15),
+			value: starts,
+			inline: true,
+		},
+	);
+
+	callback(rspd);
 };
 
 let fetchNewData = (apikey: string, guildid: string, callback: (data: IAocLeaderboard) => void) => {
@@ -335,34 +331,6 @@ const commands: { [key: string]: ICommand } = {
 			description: "Unlocks solutions channel",
 			category: "mod",
 			usage: "unlock",
-		},
-	},
-
-	fetch: {
-		execute: (msg, callback) => {
-			if (msg.guild?.id) {
-				buildLeaderboard(msg.guild?.id, (rspd) => {
-					msg.channel.send(rspd).then((msgSent) => {
-						Database.setField("leaderboardId", msg.guild?.id as string, msgSent.id, (sucess) => {
-							msg.author.send(`Operation ${sucess ? "sucessfull" : "unsucessfull"}. ${msgSent.id}`);
-						});
-					});
-				});
-			} else {
-				msg.reply("No id.");
-			}
-		},
-		config: {
-			alias: ["h"],
-			cleranceLevel: "admin",
-			cooldown: 1,
-			enabled: true,
-		},
-		help: {
-			name: "fetch",
-			description: "updates leaderboard",
-			category: "mod",
-			usage: "fetch",
 		},
 	},
 
