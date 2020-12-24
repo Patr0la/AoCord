@@ -11,17 +11,6 @@ let update5Min = new CronJob("*/5 * * * *", () => updateLeaderboard("75042931692
 let update30Min = new CronJob("*/30 * * * *", () => updateLeaderboard("750429316927717466", () => {}));
 
 let lock = (locked: boolean) => {
-	//	Database.getField("solutions", "750429316927717466", (solutionsChannel) => {
-	//		Database.getField("role", "750429316927717466", (roleid) => {
-	//			if (solutionsChannel && roleid)
-	//				client.channels.fetch(solutionsChannel).then((c) => {
-	//					let channel = c as Discord.TextChannel;
-	//
-	//					channel.updateOverwrite(roleid as string, { SEND_MESSAGES: !locked });
-	//				});
-	//		});
-	//	});
-
 	if (locked) {
 		update5Min.start();
 		update30Min.stop();
@@ -131,9 +120,10 @@ let buildLeaderboard = (guildid: string, data: IAocLeaderboard, callback: (rspd:
 
 	data.sortedByScore?.forEach((id, i) => {
 		if (i >= 20) return;
-		ranks += `**${i + 1}**` + "\n";
-		nicnkames += data.members[id].discordId ? `<@${data.members[id].discordId}>\n` : `${data.members[id].name}\n`;
-		starts += ZERO_TO_25.reduce((pv, cv) => pv + (data.members[id].completion_day_level[cv] ? (data.members[id].completion_day_level[cv]["2"] ? "★" : "☆") : ""), " ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌") + "\n";
+		ranks += `**\`${i + 1}\`**` + "\n";
+		nicnkames += ` \`★\` ${data.members[id].discordId ? "<@"+data.members[id].discordId+">" : data.members[id].name }\n`;
+		let ss = Math.floor((10 * ZERO_TO_25.reduce((pv, cv) => pv + (data.members[id].completion_day_level[cv] ? (data.members[id].completion_day_level[cv]["2"] ? 2 : 1) : 0), 0)) / 50);
+		starts += `\`${(ss == 10 ? "★" : "☆").repeat(ss).padEnd(10, " ")} ${data.members[id].stars.toString().padStart(4, " ")} ${data.members[id].local_score.toString().padStart(5, " ")}\` \n`;
 		scores += data.members[id].local_score + "\n";
 		startsTotal += data.members[id].stars + "\n";
 	});
@@ -150,7 +140,7 @@ let buildLeaderboard = (guildid: string, data: IAocLeaderboard, callback: (rspd:
 			inline: true,
 		},
 		{
-			name: "★".repeat(15),
+			name: "★ Progress   Total   Score",
 			value: starts,
 			inline: true,
 		},
